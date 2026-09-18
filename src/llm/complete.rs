@@ -1,4 +1,5 @@
 use anyhow::{ Ok, Result, };
+use crate::constant::{API_BASE_URL, API_KEY, PROXY};
 use async_openai::{
     Client,  config::OpenAIConfig, types::chat::{
         ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
@@ -11,17 +12,23 @@ use async_openai::{
 pub  async fn chat_complete(model: &str, system: Option<&str>, prompt: &str) -> Result<String> {
 
 
-    
-    let api_base = std::env::var("AI_BASE_URL")?;
-    let api_key = std::env::var("AI_API_KEY")?;
-    tracing::info!("AI_BASE_URL: {:?}", api_base);
 
-    let config: OpenAIConfig = OpenAIConfig::new().with_api_base(api_base).with_api_key(api_key);
+    let config: OpenAIConfig = OpenAIConfig::new().with_api_base(API_BASE_URL.as_str()).with_api_key(API_KEY.as_str());
 
-    let client = Client::with_config(config);
+      let proxy = PROXY.as_str().trim();
+
+    let http_client = if !proxy.is_empty() {
+        reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(proxy)?)
+            .build()?
+    } else {
+        reqwest::Client::new()
+    };
+
+    let client = Client::with_config(config)
+        .with_http_client(http_client);
 
     let mut messages = vec![];
-
 
 
     if let Some(system) = system {

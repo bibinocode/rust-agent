@@ -3,10 +3,8 @@
 use tracing::{Level};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::llm::complete::chat_complete;
-
-
-mod llm;
+use rust_agent::llm::structured::chat_complete_structured;
+use rust_agent::constant::{API_BASE_URL, MODEL};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,14 +19,13 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
 
-    let url = std::env::var("AI_BASE_URL")?;
-    let model = std::env::var("AI_MODEL")?;
-    tracing::info!("AI_BASE_URL: {:?}", url);
+    tracing::info!("AI_BASE_URL: {:?}", API_BASE_URL.as_str());
+    tracing::info!("AI_MODEL: {:?}", MODEL.as_str());
 
 
-    let res = chat_complete(&model, Some("你是一个专业的地理问答机器人"), "爱尔兰的首都是哪里?").await?;
+    let res = chat_complete_structured(&MODEL, Some("你是一个全能助手"), "我要去美加墨世界杯观看比赛，如何安排？").await?;
 
-    tracing::info!("res: {:?}", res);
+    tracing::info!("AI回答: {:#?}", res);
 
     Ok(())
 }
